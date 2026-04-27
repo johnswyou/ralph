@@ -1,6 +1,6 @@
 #!/bin/bash
 # Ralph Wiggum - Long-running AI agent loop
-# Usage: ./ralph.sh [--tool amp|claude] [max_iterations]
+# Usage: ./ralph.sh [--tool amp|claude|copilot] [max_iterations]
 
 set -e
 
@@ -29,8 +29,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate tool choice
-if [[ "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
-  echo "Error: Invalid tool '$TOOL'. Must be 'amp' or 'claude'."
+if [[ "$TOOL" != "amp" && "$TOOL" != "claude" && "$TOOL" != "copilot" ]]; then
+  echo "Error: Invalid tool '$TOOL'. Must be 'amp', 'claude', or 'copilot'."
   exit 1
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,6 +38,28 @@ PRD_FILE="$SCRIPT_DIR/prd.json"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 ARCHIVE_DIR="$SCRIPT_DIR/archive"
 LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
+
+require_command() {
+  local command_name="$1"
+  local install_hint="$2"
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "Error: '$command_name' command not found. $install_hint"
+    exit 1
+  fi
+}
+
+case "$TOOL" in
+  amp)
+    require_command "amp" "Install and authenticate Amp CLI before running Ralph with --tool amp."
+    ;;
+  claude)
+    require_command "claude" "Install and authenticate Claude Code before running Ralph with --tool claude."
+    ;;
+  copilot)
+    require_command "copilot" "Install and authenticate GitHub Copilot CLI before running Ralph with --tool copilot."
+    ;;
+esac
 
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
@@ -90,9 +112,18 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Run the selected tool with the ralph prompt
   if [[ "$TOOL" == "amp" ]]; then
     OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
-  else
+  elif [[ "$TOOL" == "claude" ]]; then
     # Claude Code: use --dangerously-skip-permissions for autonomous operation, --print for output
     OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
+  else
+    # Copilot CLI: use programmatic autopilot mode for a fresh non-interactive run
+    COPILOT_PROMPT=$(cat "$SCRIPT_DIR/COPILOT.md")
+    COPILOT_CONTINUES="${RALPH_COPILOT_MAX_AUTOPILOT_CONTINUES:-10}"
+    COPILOT_MODEL_ARGS=()
+    if [ -n "${RALPH_COPILOT_MODEL:-}" ]; then
+      COPILOT_MODEL_ARGS=(--model "$RALPH_COPILOT_MODEL")
+    fi
+    OUTPUT=$(copilot --autopilot --allow-all --no-ask-user --max-autopilot-continues "$COPILOT_CONTINUES" "${COPILOT_MODEL_ARGS[@]}" -s -p "$COPILOT_PROMPT" 2>&1 | tee /dev/stderr) || true
   fi
   
   # Check for completion signal

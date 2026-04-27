@@ -11,3 +11,6 @@ progress.txt
 
 #Claude
 .claude/
+
+# Copilot CLI local config/session data if COPILOT_HOME is pointed at the repo
+.copilot/
