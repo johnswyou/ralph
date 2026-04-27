@@ -136,7 +136,7 @@ This creates `prd.json` with user stories structured for autonomous execution.
 
 Default is 10 iterations. Use `--tool amp`, `--tool claude`, or `--tool copilot` to select your AI coding tool.
 
-Copilot mode runs each iteration with `copilot --autopilot --allow-all --no-ask-user` so Ralph can run unattended. Use it only in repositories you trust. Set `RALPH_COPILOT_MAX_AUTOPILOT_CONTINUES` to tune the per-iteration autopilot continuation cap (default: `10`), and set `RALPH_COPILOT_MODEL` to pin a Copilot model.
+Copilot mode runs each iteration with `copilot --autopilot --allow-all --no-ask-user` so Ralph can run unattended. Use it only in repositories you trust. Set `RALPH_COPILOT_MAX_AUTOPILOT_CONTINUES` to tune the per-iteration autopilot continuation cap (default: `10`), `RALPH_COPILOT_MODEL` to pin a Copilot model, and `RALPH_COPILOT_EFFORT` to set reasoning effort (`low`, `medium`, `high`, or `xhigh`).
 
 Ralph will:
 1. Create a feature branch (from PRD `branchName`)

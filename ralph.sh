@@ -123,7 +123,11 @@ for i in $(seq 1 $MAX_ITERATIONS); do
     if [ -n "${RALPH_COPILOT_MODEL:-}" ]; then
       COPILOT_MODEL_ARGS=(--model "$RALPH_COPILOT_MODEL")
     fi
-    OUTPUT=$(copilot --autopilot --allow-all --no-ask-user --max-autopilot-continues "$COPILOT_CONTINUES" "${COPILOT_MODEL_ARGS[@]}" -s -p "$COPILOT_PROMPT" 2>&1 | tee /dev/stderr) || true
+    COPILOT_EFFORT_ARGS=()
+    if [ -n "${RALPH_COPILOT_EFFORT:-}" ]; then
+      COPILOT_EFFORT_ARGS=(--effort "$RALPH_COPILOT_EFFORT")
+    fi
+    OUTPUT=$(copilot --autopilot --allow-all --no-ask-user --max-autopilot-continues "$COPILOT_CONTINUES" "${COPILOT_MODEL_ARGS[@]}" "${COPILOT_EFFORT_ARGS[@]}" -s -p "$COPILOT_PROMPT" 2>&1 | tee /dev/stderr) || true
   fi
   
   # Check for completion signal
